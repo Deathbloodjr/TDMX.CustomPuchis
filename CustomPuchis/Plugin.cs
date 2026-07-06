@@ -31,6 +31,8 @@ namespace CustomPuchis
         public new static ManualLogSource Log;
 
         public ConfigEntry<bool> ConfigEnabled;
+        public ConfigEntry<string> ConfigCustomPuchiDataDirectory;
+        public ConfigEntry<string> ConfigCustomPuchiSaveDirectory;
 
 #if MONO
         private void Awake()
@@ -69,6 +71,17 @@ namespace CustomPuchis
                    true,
                    "Enables the mod.");
             }
+
+            ConfigCustomPuchiDataDirectory = config.Bind("General",
+                "CustomPuchiDataDirectory",
+                Path.Combine(dataFolder),
+                "The root directory that holds all custom puchi characters.");
+
+            ConfigCustomPuchiSaveDirectory = config.Bind("General",
+                "CustomPuchiSaveDirectory",
+                Path.Combine(saveFolder),
+                "The directory that holds all custom puchi save data (current selected puchi, and custom puchi order.");
+
         }
 
         private void SetupHarmony()
@@ -87,8 +100,8 @@ namespace CustomPuchis
             {
                 bool result = true;
                 // If any PatchFile fails, result will become false
-                //result &= Instance.PatchFile(typeof(ExampleSingleHitBigNotesPatch));
-                //result &= Instance.PatchFile(typeof(ExampleSortByUraPatch));
+                result &= Instance.PatchFile(typeof(CustomPuchiManager));
+                CustomPuchiManager.LoadAllPuchiMetaData();
                 if (result)
                 {
                     ModLogger.Log($"Plugin {MyPluginInfo.PLUGIN_NAME} is loaded!");
@@ -154,7 +167,7 @@ namespace CustomPuchis
             // Reloading will always be completely different per mod
             // You'll want to reload any config file or save data that may be specific per profile
             // If there's nothing to reload, don't put anything here, and keep it commented in AddToSaveManager
-            //plugin.AssignReloadSaveFunction(ReloadPlugin);
+            plugin.AssignReloadSaveFunction(ReloadPlugin);
 
             // Comment this if the only config option is ConfigEnabled
             plugin.AssignConfigSetupFunction(SetupConfig);
