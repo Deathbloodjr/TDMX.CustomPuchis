@@ -1,10 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <AuthorName>InsertNameHere</AuthorName>
-    <ModName>ModTemplate</ModName>
+    <AuthorName>DB</AuthorName>
+    <ModName>CustomPuchis</ModName>
     <ModVersion>0.0.1</ModVersion>
-    <Description>A generic template for mod creation on TDMX.</Description>
+    <Description>A TDMX mod to add custom puchi characters to the game. </Description>
   </PropertyGroup>
 
   <Target Name="UserFile" AfterTargets="PreBuildEvent">
@@ -81,7 +81,6 @@
   </ItemGroup>
 
   <ItemGroup Condition="$(DefineConstants.Contains('TDMX'))">
-    <Reference Include="$(CustomGameModesPath)" Private="false" />
     <Reference Include="$(SaveProfileManagerPath)" Private="false" />
   </ItemGroup>
 

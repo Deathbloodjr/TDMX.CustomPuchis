@@ -2,7 +2,7 @@
 using BepInEx.Configuration;
 using BepInEx.Logging;
 using HarmonyLib;
-using ModTemplate.Patches;
+using CustomPuchis.Patches;
 using SaveProfileManager.Patches;
 using System;
 using System.Collections;
@@ -15,7 +15,7 @@ using BepInEx.Unity.IL2CPP.Utils;
 using BepInEx.Unity.IL2CPP;
 #endif
 
-namespace ModTemplate
+namespace CustomPuchis
 {
     [BepInPlugin(MyPluginInfo.PLUGIN_GUID, ModName, MyPluginInfo.PLUGIN_VERSION)]
 #if MONO
@@ -24,7 +24,7 @@ namespace ModTemplate
     public class Plugin : BasePlugin
 #endif
     {
-        public const string ModName = "ModTemplate";
+        public const string ModName = "CustomPuchis";
 
         public static Plugin Instance;
         private Harmony _harmony;
