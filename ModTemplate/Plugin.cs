@@ -1,0 +1,188 @@
+﻿using BepInEx;
+using BepInEx.Configuration;
+using BepInEx.Logging;
+using HarmonyLib;
+using ModTemplate.Patches;
+using SaveProfileManager.Patches;
+using System;
+using System.Collections;
+using System.IO;
+using System.Reflection;
+using UnityEngine;
+
+#if IL2CPP
+using BepInEx.Unity.IL2CPP.Utils;
+using BepInEx.Unity.IL2CPP;
+#endif
+
+namespace ModTemplate
+{
+    [BepInPlugin(MyPluginInfo.PLUGIN_GUID, ModName, MyPluginInfo.PLUGIN_VERSION)]
+#if MONO
+    public class Plugin : BaseUnityPlugin
+#elif IL2CPP
+    public class Plugin : BasePlugin
+#endif
+    {
+        public const string ModName = "ModTemplate";
+
+        public static Plugin Instance;
+        private Harmony _harmony;
+        public new static ManualLogSource Log;
+
+        public ConfigEntry<bool> ConfigEnabled;
+
+#if MONO
+        private void Awake()
+#elif IL2CPP
+        public override void Load()
+#endif
+        {
+            Instance = this;
+
+#if MONO
+            Log = Logger;
+#elif IL2CPP
+            Log = base.Log;
+#endif
+
+            SetupConfig(Config, Path.Combine("BepInEx", "data", ModName));
+            SetupHarmony();
+
+            var isSaveManagerLoaded = IsSaveManagerLoaded();
+            if (isSaveManagerLoaded)
+            {
+                AddToSaveManager();
+            }
+        }
+
+        // Any data that's likely to be shared between multiple profiles should use the dataFolder path
+        // Any data that's likely to be specific per profile should use the saveFolder path
+        private void SetupConfig(ConfigFile config, string saveFolder, bool isSaveManager = false)
+        {
+            string dataFolder = Path.Combine("BepInEx", "data", ModName);
+
+            if (!isSaveManager)
+            {
+                ConfigEnabled = config.Bind("General",
+                   "Enabled",
+                   true,
+                   "Enables the mod.");
+            }
+        }
+
+        private void SetupHarmony()
+        {
+            // Patch methods
+            _harmony = new Harmony(MyPluginInfo.PLUGIN_GUID);
+
+            LoadPlugin(ConfigEnabled.Value);
+        }
+
+        // For going from a profile that doesn't have this mod enabled, to a profile that does have this mod enabled
+        // Or, first startup
+        public static void LoadPlugin(bool enabled)
+        {
+            if (enabled)
+            {
+                bool result = true;
+                // If any PatchFile fails, result will become false
+                //result &= Instance.PatchFile(typeof(ExampleSingleHitBigNotesPatch));
+                //result &= Instance.PatchFile(typeof(ExampleSortByUraPatch));
+                if (result)
+                {
+                    ModLogger.Log($"Plugin {MyPluginInfo.PLUGIN_NAME} is loaded!");
+                }
+                else
+                {
+                    ModLogger.Log($"Plugin {MyPluginInfo.PLUGIN_GUID} failed to load.", LogType.Error);
+                    // Unload this instance of Harmony
+                    Instance._harmony.UnpatchSelf();
+                }
+            }
+            else
+            {
+                ModLogger.Log($"Plugin {MyPluginInfo.PLUGIN_NAME} is disabled.");
+            }
+        }
+
+        private bool PatchFile(Type type)
+        {
+            if (_harmony == null)
+            {
+                _harmony = new Harmony(MyPluginInfo.PLUGIN_GUID);
+            }
+            try
+            {
+                _harmony.PatchAll(type);
+                ModLogger.Log("File patched: " + type.FullName, LogType.Debug);
+                return true;
+            }
+            catch (Exception e)
+            {
+                ModLogger.Log("Failed to patch file: " + type.FullName);
+                ModLogger.Log(e.Message);
+                return false;
+            }
+        }
+
+        // For going from a profile that has this mod enabled, to a profile that doesn't have this mod enabled
+        public static void UnloadPlugin()
+        {
+            Instance._harmony.UnpatchSelf();
+            ModLogger.Log($"Plugin {MyPluginInfo.PLUGIN_NAME} has been unpatched.");
+        }
+
+        // For going from one profile that has this mod enabled, to a different mod that has this mod enabled
+        public static void ReloadPlugin()
+        {
+            // Reloading will always be completely different per mod
+            // You'll want to reload any config file or save data that may be specific per profile
+            // If there's nothing to reload, don't put anything here, and keep it commented in AddToSaveManager
+            //SwapSongLanguagesPatch.InitializeOverrideLanguages();
+            //TaikoSingletonMonoBehaviour<CommonObjects>.Instance.MyDataManager.MusicData.Reload();
+        }
+
+        public void AddToSaveManager()
+        {
+            // Add SaveDataManager dll path to your csproj.user file
+            // https://github.com/Deathbloodjr/TDMX.SaveProfileManager
+            var plugin = new PluginSaveDataInterface(MyPluginInfo.PLUGIN_GUID);
+            plugin.AssignLoadFunction(LoadPlugin);
+            plugin.AssignUnloadFunction(UnloadPlugin);
+
+            // Reloading will always be completely different per mod
+            // You'll want to reload any config file or save data that may be specific per profile
+            // If there's nothing to reload, don't put anything here, and keep it commented in AddToSaveManager
+            //plugin.AssignReloadSaveFunction(ReloadPlugin);
+
+            // Comment this if the only config option is ConfigEnabled
+            plugin.AssignConfigSetupFunction(SetupConfig);
+            plugin.AddToManager(ConfigEnabled.Value);
+        }
+
+        private bool IsSaveManagerLoaded()
+        {
+            try
+            {
+                Assembly loadedAssembly = Assembly.Load("com.DB.TDMX.SaveProfileManager");
+                return loadedAssembly != null;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public static MonoBehaviour GetMonoBehaviour() => TaikoSingletonMonoBehaviour<CommonObjects>.Instance;
+
+        public void StartCustomCoroutine(IEnumerator enumerator)
+        {
+#if MONO
+            GetMonoBehaviour().StartCoroutine(enumerator);
+#elif IL2CPP
+            GetMonoBehaviour().StartCoroutine(enumerator);
+#endif
+        }
+    }
+}
