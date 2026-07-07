@@ -33,26 +33,8 @@ namespace CustomPuchis.Patches
 
         void LoadSprites()
         {
-            sprite1 = LoadSprite(Path.Combine("BepInEx", "data", "TestingMods", "CustomPuchi", "Puchi1.png"));
-            sprite2 = LoadSprite(Path.Combine("BepInEx", "data", "TestingMods", "CustomPuchi", "Puchi2.png"));
-        }
-
-        Sprite LoadSprite(string filePath)
-        {
-            byte[] fileData = File.ReadAllBytes(filePath);
-            Texture2D texture = new Texture2D(2, 2, TextureFormat.RGBA32, false);
-            if (!texture.LoadImage(fileData))
-            {
-                ModLogger.Log($"Failed to load texture data from bytes: {filePath}");
-                return null;
-            }
-
-            Rect rect = new Rect(0, 0, texture.width, texture.height);
-            Vector2 pivot = new Vector2(0.5f, 0.5f);
-            float pixelsPerUnit = 100f;
-
-            Sprite customSprite = Sprite.Create(texture, rect, pivot, pixelsPerUnit);
-            return customSprite;
+            sprite1 = SpriteUtility.LoadSprite(Path.Combine("BepInEx", "data", "TestingMods", "CustomPuchi", "Puchi1.png"));
+            sprite2 = SpriteUtility.LoadSprite(Path.Combine("BepInEx", "data", "TestingMods", "CustomPuchi", "Puchi2.png"));
         }
 
         void LateUpdate()

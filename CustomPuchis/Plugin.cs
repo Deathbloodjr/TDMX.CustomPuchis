@@ -101,7 +101,8 @@ namespace CustomPuchis
                 bool result = true;
                 // If any PatchFile fails, result will become false
                 result &= Instance.PatchFile(typeof(CustomPuchiManager));
-                CustomPuchiManager.LoadAllPuchiMetaData();
+                result &= Instance.PatchFile(typeof(DonThumbnailPatch));
+                CustomPuchiManager.Load();
                 if (result)
                 {
                     ModLogger.Log($"Plugin {MyPluginInfo.PLUGIN_NAME} is loaded!");
@@ -142,6 +143,7 @@ namespace CustomPuchis
         // For going from a profile that has this mod enabled, to a profile that doesn't have this mod enabled
         public static void UnloadPlugin()
         {
+            CustomPuchiManager.Unload();
             Instance._harmony.UnpatchSelf();
             ModLogger.Log($"Plugin {MyPluginInfo.PLUGIN_NAME} has been unpatched.");
         }
@@ -152,8 +154,7 @@ namespace CustomPuchis
             // Reloading will always be completely different per mod
             // You'll want to reload any config file or save data that may be specific per profile
             // If there's nothing to reload, don't put anything here, and keep it commented in AddToSaveManager
-            //SwapSongLanguagesPatch.InitializeOverrideLanguages();
-            //TaikoSingletonMonoBehaviour<CommonObjects>.Instance.MyDataManager.MusicData.Reload();
+            CustomPuchiManager.Reload();
         }
 
         public void AddToSaveManager()

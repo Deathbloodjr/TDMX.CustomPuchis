@@ -11,11 +11,11 @@ namespace CustomPuchis.Patches
 {
     internal class CustomPuchiLoader
     {
-        public static List<PuchiMetaData> LoadAllPuchiMetaData()
+        public static List<PuchiMetaData> LoadAllPuchiMetaData(string folderPath)
         {
             List<PuchiMetaData> result = new List<PuchiMetaData>();
 
-            var manifestFiles = Directory.EnumerateFiles(Plugin.Instance.ConfigCustomPuchiDataDirectory.Value, "*", SearchOption.AllDirectories)
+            var manifestFiles = Directory.EnumerateFiles(folderPath, "*", SearchOption.AllDirectories)
                 .Where(file => file.EndsWith("puchi.json", StringComparison.OrdinalIgnoreCase));
 
             foreach (string filePath in manifestFiles)
@@ -23,8 +23,17 @@ namespace CustomPuchis.Patches
                 var puchiData = LoadPuchiMetaData(filePath);
                 if (puchiData != null)
                 {
-                    result.Add(puchiData);
-                    ModLogger.Log(result[result.Count - 1].Name.enText + " has been loaded");
+                    var duplicateIndex = result.FindIndex((x) => x.StringId == puchiData.StringId);
+                    if (duplicateIndex != -1)
+                    {
+                        ModLogger.Log("Duplicate custom puchi found with Id of " +  puchiData.StringId);
+                        continue;
+                    }
+                    else
+                    {
+                        result.Add(puchiData);
+                        ModLogger.Log(result[result.Count - 1].NameInfo.enText + " has been loaded");
+                    }
                 }
                 else
                 {
@@ -55,6 +64,7 @@ namespace CustomPuchis.Patches
                 var jsonNode = LWJson.Parse(jsonString);
 
                 PuchiMetaData data = new PuchiMetaData();
+                data.FolderPath = Path.GetDirectoryName(filePath);
                 data.Id = jsonNode["Id"].AsString();
                 if (jsonNode["Order"] != null)
                 {
@@ -62,11 +72,11 @@ namespace CustomPuchis.Patches
                 }
                 if (jsonNode["Name"] != null)
                 {
-                    data.Name = ParseWordListData(data.NameKey, jsonNode["Name"].AsObject());
+                    data.NameInfo = ParseWordListData(data.NameKey, jsonNode["Name"].AsObject());
                 }
                 if (jsonNode["Description"] != null)
                 {
-                    data.Description = ParseWordListData(data.DescriptionKey, jsonNode["Description"].AsObject());
+                    data.DescriptionInfo = ParseWordListData(data.DescriptionKey, jsonNode["Description"].AsObject());
                 }
                 if (jsonNode["Files"] != null)
                 {
@@ -78,8 +88,21 @@ namespace CustomPuchis.Patches
                 }
                 else
                 {
-                    string folder = Path.GetDirectoryName(filePath);
-                    data.Files = DiscoverImagesNaturally(folder);
+                    data.Files = DiscoverImagesNaturally(data.FolderPath);
+                }
+
+                if (data.Files.Count == 0)
+                {
+                    ModLogger.Log("Error loading puchi, no image files found: " + filePath, LogType.Warning);
+                    return null;
+                }
+                if (jsonNode["Sprite"] != null)
+                {
+                    data.SpriteFile = jsonNode["Sprite"].AsString();
+                }
+                else
+                {
+                    data.SpriteFile = data.Files[0];
                 }
 
                 return data;
@@ -97,6 +120,27 @@ namespace CustomPuchis.Patches
             data.key = key;
             try
             {
+                // FontTypes should be the same for each language for the most part
+                // No need to declare it for every character, but it can be overwritten if needed
+                // Also, I don't know which values are needed for each
+                // These numbers line up with the enum DataConst.FontType:
+                // None     = -1
+                // Japanese = 0
+                // EFIGS    = 1
+                // ChineseT = 2
+                // ChineseS = 3
+                // Korean   = 4
+
+                data.jpFontType = 0;
+                data.enFontType = 1;
+                data.frFontType = 1;
+                data.itFontType = 1;
+                data.deFontType = 1;
+                data.esFontType = 1;
+                data.tcFontType = 2;
+                data.scFontType = 3;
+                data.krFontType = 4;
+
                 if (wordListObj["jpText"] != null) data.jpText = wordListObj["jpText"].AsString();
                 if (wordListObj["jpFont"] != null) data.jpFontType = wordListObj["jpFont"].AsInteger();
                 if (wordListObj["enText"] != null) data.enText = wordListObj["enText"].AsString();
