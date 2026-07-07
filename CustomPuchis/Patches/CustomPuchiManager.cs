@@ -57,6 +57,7 @@ namespace CustomPuchis.Patches
             //donCosDataInterface = __instance.DonCosData;
             //wordDataInterface = __instance.WordData;
             var donCosInfoAccessers = __instance.DonCosData.donCosInfoAccessers;
+            int numMakeFree = 3;
             for (int i = 0; i < donCosInfoAccessers.Count; i++)
             {
                 //ModLogger.Log("donCosInfoAccessers["+i+"].UniqueId: " + donCosInfoAccessers[i].UniqueId);
@@ -68,6 +69,11 @@ namespace CustomPuchis.Patches
                 //ModLogger.Log("donCosInfoAccessers["+i+"].Order: " + donCosInfoAccessers[i].Order);
                 //ModLogger.Log("donCosInfoAccessers["+i+"].Price: " + donCosInfoAccessers[i].Price);
                 //ModLogger.Log("donCosInfoAccessers["+i+"].Puchi: " + donCosInfoAccessers[i].Puchi);
+                if (donCosInfoAccessers[i].Puchi != -1 && numMakeFree > 0)
+                {
+                    donCosInfoAccessers[i].Price = 0;
+                    numMakeFree--;
+                }
                 OfficialDonCosInfoAccesser.Add(donCosInfoAccessers[i]);
             }
             AddCustomPuchi();
@@ -235,7 +241,7 @@ namespace CustomPuchis.Patches
 
         public static PuchiMetaData GetPuchiFromPartsId(int partsId)
         {
-            if (partsId >= 100000)
+            if (IsCustomPuchiByPartsId(partsId))
             {
                 int id = partsId - 100000;
                 if (AllCustomPuchi.Count > id)
@@ -248,6 +254,20 @@ namespace CustomPuchis.Patches
                 }
             }
             return null;
+        }
+
+        public static PuchiMetaData GetPuchiFromStringId(string stringId)
+        {
+            var index = AllCustomPuchi.FindIndex((x) => x.StringId == stringId);
+            if (index != -1)
+            {
+                return AllCustomPuchi[index];
+            }
+            else
+            {
+                ModLogger.Log("Couldn't find custom puchi with StringId of :" + stringId, LogType.Error);
+                return null;
+            }
         }
 
         public static bool IsOfficialPuchi(int UniqueId)

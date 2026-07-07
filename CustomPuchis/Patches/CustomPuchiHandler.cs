@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -11,9 +12,8 @@ namespace CustomPuchis.Patches
 {
     class CustomPuchiHandler : MonoBehaviour
     {
-        bool isSprite1;
-        public Sprite sprite1;
-        public Sprite sprite2;
+        int currentIndex = 0;
+        List<Sprite> sprites = new List<Sprite>();
 
         public Sprite previousSprite;
 
@@ -27,38 +27,42 @@ namespace CustomPuchis.Patches
             }
 
             previousSprite = image.sprite;
-            isSprite1 = false;
-            LoadSprites();
         }
 
-        void LoadSprites()
+        public void Initialize(PuchiMetaData data = null)
         {
-            sprite1 = SpriteUtility.LoadSprite(Path.Combine("BepInEx", "data", "TestingMods", "CustomPuchi", "Puchi1.png"));
-            sprite2 = SpriteUtility.LoadSprite(Path.Combine("BepInEx", "data", "TestingMods", "CustomPuchi", "Puchi2.png"));
+            currentIndex = 0;
+            sprites.Clear();
+
+            if (data == null)
+            {
+                return;
+            }
+            for (int i = 0; i < data.Files.Count; i++)
+            {
+                sprites.Add(SpriteUtility.LoadSprite(Path.Combine(data.FolderPath, data.Files[i])));
+            }
         }
 
         void LateUpdate()
         {
-            // The Animator just forced the game's original sprite here
-            Sprite activeGameSprite = image.sprite;
+            if (sprites.Count > 0)
+            {
+                // The Animator just forced the game's original sprite here
+                Sprite activeGameSprite = image.sprite;
 
-            // Intercept and swap it based on its identity
-            if (activeGameSprite != previousSprite)
-            {
-                previousSprite = activeGameSprite;
-                isSprite1 = !isSprite1;
-                //ModLogger.Log("Changing sprite to Sprite" + (isSprite1 ? 1 : 2));
-                // This log was happening way more often than the sprite was changing, so that's odd
-            }
+                if (sprites.Contains(activeGameSprite))
+                {
+                    return;
+                }
 
-            // You always need to set the sprite
-            if (isSprite1)
-            {
-                image.sprite = sprite1;
-            }
-            else
-            {
-                image.sprite = sprite2;
+                // Intercept and swap it increase index
+                if (activeGameSprite != previousSprite)
+                {
+                    previousSprite = activeGameSprite;
+                    currentIndex = (currentIndex + 1) % sprites.Count;
+                }
+                image.sprite = sprites[currentIndex];
             }
         }
     }

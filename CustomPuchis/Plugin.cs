@@ -102,6 +102,7 @@ namespace CustomPuchis
                 // If any PatchFile fails, result will become false
                 result &= Instance.PatchFile(typeof(CustomPuchiManager));
                 result &= Instance.PatchFile(typeof(DonThumbnailPatch));
+                result &= Instance.PatchFile(typeof(CustomPuchiPatch));
                 CustomPuchiManager.Load();
                 if (result)
                 {
