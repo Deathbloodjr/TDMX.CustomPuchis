@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Prime31;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -145,31 +146,64 @@ namespace LightWeightJsonParser
 			}
 		}
 
-		public override string ToString()
-		{
-			var sb = new StringBuilder();
-			int iterations = 0;
+        public string ToString(bool isIndented)
+        {
+            return FormatArray(0, isIndented);
+        }
 
-			sb.Append("[");
-			foreach (var obj in ArrayData)
-			{
-				if (iterations++ != 0)
-				{
-					sb.Append(",");
-				}
-				sb.Append($"{obj.ToString()}");
-			}
-			sb.Append("]");
+        public override string ToString()
+        {
+            return ToString(false);
+        }
 
-			return sb.ToString();
-		}
+        internal string FormatArray(int indentLevel, bool isIndented)
+        {
+            var sb = new StringBuilder();
+            int iterations = 0;
 
-		/// <summary>
-		/// Checks that the provided JSON chunk begins with an opening square bracket '['
-		/// and ends with a closed square bracket ']'. Thus, the expected format is '[...]'.
-		/// </summary>
-		/// <param name="jsonChunk"></param>
-		private void CheckChunkValidity(string jsonChunk)
+            string indent = isIndented ? new string(' ', indentLevel * 4) : "";
+            string nextIndent = isIndented ? new string(' ', (indentLevel + 1) * 4) : "";
+            string newLine = isIndented ? "\n" : "";
+
+            sb.Append("[").Append(newLine);
+            foreach (var obj in ArrayData)
+            {
+                if (iterations++ != 0)
+                {
+                    sb.Append(",").Append(newLine);
+                }
+
+                sb.Append(nextIndent);
+
+                // Recursively pass formatting rules down down to child elements
+                if (obj == null)
+                {
+                    sb.Append("null");
+                }
+                else if (obj is LWJsonObject childObj)
+                {
+                    sb.Append(childObj.FormatObject(indentLevel + 1, isIndented));
+                }
+                else if (obj is LWJsonArray childArr)
+                {
+                    sb.Append(childArr.FormatArray(indentLevel + 1, isIndented));
+                }
+                else
+                {
+                    sb.Append(obj.ToString());
+                }
+            }
+            sb.Append(newLine).Append(indent).Append("]");
+
+            return sb.ToString();
+        }
+
+        /// <summary>
+        /// Checks that the provided JSON chunk begins with an opening square bracket '['
+        /// and ends with a closed square bracket ']'. Thus, the expected format is '[...]'.
+        /// </summary>
+        /// <param name="jsonChunk"></param>
+        private void CheckChunkValidity(string jsonChunk)
 		{
 			if (jsonChunk[0] != '[' || jsonChunk[jsonChunk.Length - 1] != ']')
 			{

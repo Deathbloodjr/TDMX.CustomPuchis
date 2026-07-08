@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Prime31;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -248,34 +249,71 @@ namespace LightWeightJsonParser
 			}
 		}
 
-		public override string ToString()
-		{
-			var sb = new StringBuilder();
-			int iterations = 0;
+        public string ToString(bool isIndented)
+        {
+            return FormatObject(0, isIndented);
+        }
 
-			sb.Append("{");
-			foreach (var pair in m_ObjectData)
-			{
-				if (iterations++ != 0)
-				{
-					sb.Append(",");
-				}
-				sb.AppendFormat("{0}:{1}", WrapInQuotes(pair.Key), (pair.Value != null ? pair.Value.ToString() : "null"));
-			}
-			sb.Append("}");
+        public override string ToString()
+        {
+            return ToString(false);
+        }
 
-			return sb.ToString();
-		}
-		#endregion
+        internal string FormatObject(int indentLevel, bool isIndented)
+        {
+            var sb = new StringBuilder();
+            int iterations = 0;
+
+            string indent = isIndented ? new string(' ', indentLevel * 4) : "";
+            string nextIndent = isIndented ? new string(' ', (indentLevel + 1) * 4) : "";
+            string newLine = isIndented ? "\n" : "";
+            string spaceAfterColon = isIndented ? " " : "";
+
+            sb.Append("{").Append(newLine);
+            foreach (var pair in m_ObjectData)
+            {
+                if (iterations++ != 0)
+                {
+                    sb.Append(",").Append(newLine);
+                }
+
+                sb.Append(nextIndent);
+                sb.Append(WrapInQuotes(pair.Key));
+                sb.Append(":");
+                sb.Append(spaceAfterColon);
+
+                // Recursively pass formatting rules down down to child elements
+                if (pair.Value == null)
+                {
+                    sb.Append("null");
+                }
+                else if (pair.Value is LWJsonObject childObj)
+                {
+                    sb.Append(childObj.FormatObject(indentLevel + 1, isIndented));
+                }
+                else if (pair.Value is LWJsonArray childArr)
+                {
+                    sb.Append(childArr.FormatArray(indentLevel + 1, isIndented));
+                }
+                else
+                {
+                    sb.Append(pair.Value.ToString());
+                }
+            }
+            sb.Append(newLine).Append(indent).Append("}");
+
+            return sb.ToString();
+        }
+        #endregion
 
 
-		#region HELPERS
-		/// <summary>
-		/// Checks that the provided JSON chunk begins with an opening curly brace '{'
-		/// and ends with a closed curly brace '}'. Thus, the expected format is '{...}'.
-		/// </summary>
-		/// <param name="jsonChunk"></param>
-		private static void CheckChunkValidity(string jsonChunk)
+        #region HELPERS
+        /// <summary>
+        /// Checks that the provided JSON chunk begins with an opening curly brace '{'
+        /// and ends with a closed curly brace '}'. Thus, the expected format is '{...}'.
+        /// </summary>
+        /// <param name="jsonChunk"></param>
+        private static void CheckChunkValidity(string jsonChunk)
 		{
 			if (jsonChunk[0] != '{' || jsonChunk[jsonChunk.Length - 1] != '}')
 			{

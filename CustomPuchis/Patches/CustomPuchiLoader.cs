@@ -18,6 +18,8 @@ namespace CustomPuchis.Patches
                 Directory.CreateDirectory(folderPath);
             }
 
+            CreateTemplatePuchiJson(folderPath);
+
             List<PuchiMetaData> result = new List<PuchiMetaData>();
 
             var manifestFiles = Directory.EnumerateFiles(folderPath, "*", SearchOption.AllDirectories)
@@ -185,6 +187,56 @@ namespace CustomPuchis.Patches
                 .Select(Path.GetFileName)
                 .OrderBy(f => Regex.Replace(f, @"\d+", m => m.Value.PadLeft(5, '0')))
                 .ToList();
+        }
+
+        private static void CreateTemplatePuchiJson(string folderPath)
+        {
+            LWJsonObject template = new LWJsonObject()
+                .Add("Id", "Required")
+                .Add("Order", 0)
+                .Add("Name", new LWJsonObject()
+                    .Add("jpText", "")
+                    .Add("enText", ""))
+                .Add("Description", new LWJsonObject()
+                    .Add("jpText", "")
+                    .Add("enText", ""))
+                .Add("Files", new LWJsonArray()
+                    .Add(new LWJsonValue("frame_0.png"))
+                    .Add(new LWJsonValue("frame_1.png")))
+                .Add("Sprite", "frame_0.png");
+
+            var jsonString = template.ToString(true);
+
+            File.WriteAllText(Path.Combine(folderPath, "PuchiTemplate.json"), jsonString);
+
+            List<string> readme = new List<string>()
+            {
+                "Puchi json files must end with \"puchi.json\" to be parsed.",
+                "Only 1 Puchi per folder is recommended.",
+                "",
+                "Only Id is required.", 
+                "",
+                "If Files is blank, it'll just take all .png files from the folder in alphabetical order.",
+                "",
+                "Sprite is used for the thumbnail in the Customize menu.",
+                "",
+                "Name and Description can include these language options:",
+                "jpText",
+                "enText",
+                "frText",
+                "itText",
+                "deText",
+                "esText",
+                "tcText",
+                "scText",
+                "krText",
+                "",
+                "Order will always be after all official Puchi characters in the Customize menu.",
+                "",
+                "PuchiTemplate.json and Readme.txt are generated at runtime, and will be overwritten each time.",
+            };
+
+            File.WriteAllLines(Path.Combine(folderPath, "Readme.txt"), readme);
         }
     }
 }

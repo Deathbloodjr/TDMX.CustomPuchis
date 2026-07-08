@@ -33,7 +33,7 @@ namespace CustomPuchis.Patches
 
 
             string saveFilePath = GetSaveFilePath();
-            var jsonString = json.ToString();
+            var jsonString = json.ToString(true);
             File.WriteAllText(saveFilePath, jsonString);
         }
 

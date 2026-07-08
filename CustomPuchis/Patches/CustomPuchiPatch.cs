@@ -76,7 +76,16 @@ namespace CustomPuchis.Patches
         public static void CustomizeMyDon_ChangeTab_Prefix(CustomizeMyDon __instance, DataConst.CustomizeTab nextTab)
         {
             isTryingPuchi = nextTab == DataConst.CustomizeTab.Puchi;
-            // Have some other place to disable IsTryingPuchi
+        }
+
+        [HarmonyPatch(typeof(ShopDisplay))]
+        [HarmonyPatch(nameof(ShopDisplay.ChangeTab))]
+        [HarmonyPatch(new Type[] { typeof(DataConst.ShopTab) } )]
+        [HarmonyPatch(MethodType.Normal)]
+        [HarmonyPrefix]
+        public static void ShopDisplay_ChangeTab_Prefix(ShopDisplay __instance, DataConst.ShopTab nextTab)
+        {
+            isTryingPuchi = nextTab == DataConst.ShopTab.Puchi;
         }
 
         [HarmonyPatch(typeof(CustomizeMyDon))]
@@ -89,6 +98,15 @@ namespace CustomPuchis.Patches
             {
                 isTryingPuchi = false;
             }
+        }
+
+        [HarmonyPatch(typeof(ShopDisplay))]
+        [HarmonyPatch(nameof(ShopDisplay.FadeScreenOut))]
+        [HarmonyPatch(MethodType.Normal)]
+        [HarmonyPrefix]
+        public static void ShopDisplay_FadeScreenOut_Prefix(ShopDisplay __instance)
+        {
+            isTryingPuchi = false;
         }
 
 
