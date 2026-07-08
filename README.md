@@ -5,6 +5,14 @@
 
  A TDMX mod to add custom puchi characters to the game. 
 
+
+On first launch, a folder will be created at BepInEx/data/CustomPuchis, along with a PuchiTemplate.json and Readme.txt file.
+
+To make a custom puchi character, make a folder at this location with whatever images the puchi will have, and copy the PuchiTemplate.json file into that folder. See the Readme.txt file for more info on the json file. 
+
+
+
+
 # Requirements
  Visual Studio 2022\
  A 1.3.0+ version of the game to compile IL2CPP versions, Mono is buildable without any version of the game.
