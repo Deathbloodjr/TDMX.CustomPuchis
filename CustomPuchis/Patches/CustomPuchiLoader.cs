@@ -25,6 +25,7 @@ namespace CustomPuchis.Patches
             var manifestFiles = Directory.EnumerateFiles(folderPath, "*", SearchOption.AllDirectories)
                 .Where(file => file.EndsWith("puchi.json", StringComparison.OrdinalIgnoreCase));
 
+            int numPuchiLoaded = 0;
             foreach (string filePath in manifestFiles)
             {
                 var puchiData = LoadPuchiMetaData(filePath);
@@ -33,13 +34,14 @@ namespace CustomPuchis.Patches
                     var duplicateIndex = result.FindIndex((x) => x.StringId == puchiData.StringId);
                     if (duplicateIndex != -1)
                     {
-                        ModLogger.Log("Duplicate custom puchi found with Id of " +  puchiData.StringId);
+                        ModLogger.Log("Duplicate custom puchi found with Id of " +  puchiData.StringId, LogType.Warning);
                         continue;
                     }
                     else
                     {
                         result.Add(puchiData);
-                        ModLogger.Log(result[result.Count - 1].NameInfo.enText + " has been loaded");
+                        numPuchiLoaded++;
+                        ModLogger.Log(result[result.Count - 1].NameInfo.enText + " has been loaded", LogType.Debug);
                     }
                 }
                 else
@@ -47,6 +49,7 @@ namespace CustomPuchis.Patches
                     ModLogger.Log("Error loading puchiData", LogType.Warning);
                 }
             }
+            ModLogger.Log(numPuchiLoaded + " custom puchi have been loaded.");
 
             // TODO: Sort AllCustomPuchi
             // TODO: Read in Order.json

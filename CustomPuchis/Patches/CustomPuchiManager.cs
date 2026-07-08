@@ -145,7 +145,7 @@ namespace CustomPuchis.Patches
 
         private static void RemoveCustomPuchi()
         {
-            ModLogger.Log("RemoveCustomPuchi");
+            ModLogger.Log("RemoveCustomPuchi", LogType.Debug);
             try
             {
                 var DonCosInfoAccessers = donCosDataInterface.donCosInfoAccessers;
@@ -205,7 +205,7 @@ namespace CustomPuchis.Patches
 
         private static void AddCustomPuchi()
         {
-            ModLogger.Log("AddCustomPuchi");
+            ModLogger.Log("AddCustomPuchi", LogType.Debug);
             if (donCosDataInterface == null ||
                 wordDataInterface == null)
             {
@@ -245,7 +245,7 @@ namespace CustomPuchis.Patches
                     wordDataInterface.WordDataInterfaces(AllCustomPuchi[i].NameKey, AllCustomPuchi[i].Name(latestLanguage), AllCustomPuchi[i].NameFont(latestLanguage));
                     wordDataInterface.WordDataInterfaces(AllCustomPuchi[i].DescriptionKey, AllCustomPuchi[i].Description(latestLanguage), AllCustomPuchi[i].DescriptionFont(latestLanguage));
 
-                    ModLogger.Log("Added puchi " + AllCustomPuchi[i].StringId);
+                    //ModLogger.Log("Added puchi " + AllCustomPuchi[i].StringId, LogType.Debug);
                 }
             }
         }
