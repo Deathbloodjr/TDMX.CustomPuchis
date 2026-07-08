@@ -13,6 +13,11 @@ namespace CustomPuchis.Patches
     {
         public static List<PuchiMetaData> LoadAllPuchiMetaData(string folderPath)
         {
+            if (!Directory.Exists(folderPath))
+            {
+                Directory.CreateDirectory(folderPath);
+            }
+
             List<PuchiMetaData> result = new List<PuchiMetaData>();
 
             var manifestFiles = Directory.EnumerateFiles(folderPath, "*", SearchOption.AllDirectories)

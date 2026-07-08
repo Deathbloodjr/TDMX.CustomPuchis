@@ -5,7 +5,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
-using UnityEngine.Profiling.Memory.Experimental;
 using static MultiplayManager;
 
 namespace CustomPuchis.Patches
@@ -46,8 +45,7 @@ namespace CustomPuchis.Patches
                     var tmpCustomPuchiMetaData = CustomPuchiManager.GetPuchiFromPartsId(customId);
                     if (tmpCustomPuchiMetaData != null)
                     {
-                        //puchiId = 11000; // Master Bachio, to ensure the sprites change
-                        puchiId = 23000; // Master Bachio, to ensure the sprites change
+                        puchiId = 11000; // Master Bachio, to ensure the sprites change
 
                         puchiHandler.Initialize(tmpCustomPuchiMetaData);
                     }
@@ -65,6 +63,7 @@ namespace CustomPuchis.Patches
             }
             else
             {
+                puchiId = 11000; // Master Bachio, to ensure the sprites change
                 puchiHandler.Initialize(customPuchiMetaData);
             }
         }
@@ -78,6 +77,18 @@ namespace CustomPuchis.Patches
         {
             isTryingPuchi = nextTab == DataConst.CustomizeTab.Puchi;
             // Have some other place to disable IsTryingPuchi
+        }
+
+        [HarmonyPatch(typeof(CustomizeMyDon))]
+        [HarmonyPatch(nameof(CustomizeMyDon.ChangeState))]
+        [HarmonyPatch(MethodType.Normal)]
+        [HarmonyPrefix]
+        public static void CustomizeMyDon_ChangeState_Prefix(CustomizeMyDon __instance, CustomizeMyDon.State nextState)
+        {
+            if (nextState == CustomizeMyDon.State.Closing)
+            {
+                isTryingPuchi = false;
+            }
         }
 
 
@@ -103,6 +114,25 @@ namespace CustomPuchis.Patches
                     {
                         isCustomPuchi = true;
                     }
+                }
+                SaveDataManager.SavePuchiData(customPuchiMetaData, isCustomPuchi);
+            }
+        }
+
+        [HarmonyPatch(typeof(PlayDataManager))]
+        [HarmonyPatch(nameof(PlayDataManager.LoadData))]
+        [HarmonyPatch(MethodType.Normal)]
+        [HarmonyPostfix]
+        public static void PlayDataManager_LoadData_Postfix(PlayDataManager __instance, string containerName, string blobName)
+        {
+            if (blobName.StartsWith("save"))
+            {
+                SaveDataManager.LoadPuchiData();
+                var currentPuchi = SaveDataManager.GetSavedCurrentPuchi();
+                if (currentPuchi != string.Empty)
+                {
+                    isCustomPuchi = true;
+                    customPuchiMetaData = CustomPuchiManager.GetPuchiFromStringId(currentPuchi);
                 }
             }
         }
