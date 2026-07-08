@@ -7,11 +7,18 @@ using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
+#if IL2CPP
+using Il2CppInterop.Runtime.Injection;
+#endif
 
 namespace CustomPuchis.Patches
 {
     class CustomPuchiHandler : MonoBehaviour
     {
+#if IL2CPP
+        static CustomPuchiHandler() => ClassInjector.RegisterTypeInIl2Cpp<CustomPuchiHandler>();
+#endif
+
         int currentIndex = 0;
         List<Sprite> sprites = new List<Sprite>();
 

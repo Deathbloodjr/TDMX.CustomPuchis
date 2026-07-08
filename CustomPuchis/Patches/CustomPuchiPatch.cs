@@ -5,7 +5,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
-using static MultiplayManager;
 
 namespace CustomPuchis.Patches
 {
@@ -137,11 +136,12 @@ namespace CustomPuchis.Patches
             }
         }
 
+        // PlayDataManager.LoadData wasn't called on the IL2CPP version, but this one's called on both
         [HarmonyPatch(typeof(PlayDataManager))]
-        [HarmonyPatch(nameof(PlayDataManager.LoadData))]
+        [HarmonyPatch(nameof(PlayDataManager.LoadSaveData))]
         [HarmonyPatch(MethodType.Normal)]
         [HarmonyPostfix]
-        public static void PlayDataManager_LoadData_Postfix(PlayDataManager __instance, string containerName, string blobName)
+        public static void PlayDataManager_LoadSaveData_Postfix(PlayDataManager __instance, string containerName, string blobName)
         {
             if (blobName.StartsWith("save"))
             {

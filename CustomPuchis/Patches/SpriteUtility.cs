@@ -5,12 +5,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace CustomPuchis.Patches
 {
     internal class SpriteUtility
     {
         private static Dictionary<string, Sprite> LoadedSprites = new Dictionary<string, Sprite>();
+        private static Dictionary<string, GameObject> LoadedSpriteGameObjects = new Dictionary<string, GameObject>();
 
         public static Sprite LoadSprite(string filePath)
         {
@@ -35,19 +37,37 @@ namespace CustomPuchis.Patches
 
             byte[] fileData = File.ReadAllBytes(filePath);
             Texture2D texture = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+#if TDMX_MONO
             if (!texture.LoadImage(fileData))
             {
                 ModLogger.Log($"Failed to load texture data from bytes: {filePath}", LogType.Error);
                 return null;
             }
+#else
+            ImageConversion.LoadImage(texture, fileData);
+#endif
 
             Rect rect = new Rect(0, 0, texture.width, texture.height);
             Vector2 pivot = new Vector2(0.5f, 0.5f);
             float pixelsPerUnit = 100f;
 
             Sprite customSprite = Sprite.Create(texture, rect, pivot, pixelsPerUnit);
-            LoadedSprites.Add(filePath, customSprite);
+            AddSpriteToDictionary(filePath, customSprite);
+            //LoadedSprites.Add(filePath, customSprite);
             return customSprite;
+        }
+
+        private static void AddSpriteToDictionary(string filePath, Sprite sprite)
+        {
+            if (!LoadedSprites.ContainsKey(filePath))
+            {
+                LoadedSprites.Add(filePath, sprite);
+                GameObject obj = new GameObject("SaveSprite");
+                var image = obj.AddComponent<Image>();
+                image.sprite = sprite;
+                UnityEngine.Object.DontDestroyOnLoad(obj);
+                LoadedSpriteGameObjects.Add(filePath, obj);
+            }
         }
     }
 }

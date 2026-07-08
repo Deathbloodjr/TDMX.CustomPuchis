@@ -39,16 +39,21 @@ namespace CustomPuchis.Patches
 
         public static void LoadPuchiData()
         {
+            ModLogger.Log("LoadPuchiData", LogType.Debug);
             saveData = new SaveData();
             string saveFilePath = GetSaveFilePath();
             if (File.Exists(saveFilePath))
             {
+                ModLogger.Log("LoadPuchiData File Found", LogType.Debug);
                 string jsonString = File.ReadAllText(saveFilePath);
                 var node = LWJson.Parse(jsonString);
 
                 if (node["IsUsingCustomPuchi"] != null)
                 {
                     saveData.IsUsingCustomPuchi = node["IsUsingCustomPuchi"].AsBoolean();
+                }
+                if (node["CustomPuchiStringId"] != null)
+                {
                     saveData.CustomPuchiStringId = node["CustomPuchiStringId"].AsString();
                 }
             }
@@ -63,6 +68,7 @@ namespace CustomPuchis.Patches
         {
             if (saveData != null && saveData.IsUsingCustomPuchi)
             {
+                ModLogger.Log("GetSavedCurrentPuchi saveData.CustomPuchiStringId: " + saveData.CustomPuchiStringId, LogType.Debug);
                 return saveData.CustomPuchiStringId;
             }
             return string.Empty;

@@ -8,6 +8,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
 using UnityEngine;
+using static DonCosDataInterface;
+using static WordDataInterface;
 
 namespace CustomPuchis.Patches
 {
@@ -56,27 +58,30 @@ namespace CustomPuchis.Patches
         {
             //donCosDataInterface = __instance.DonCosData;
             //wordDataInterface = __instance.WordData;
-            var donCosInfoAccessers = __instance.DonCosData.donCosInfoAccessers;
-            int numMakeFree = 3;
-            for (int i = 0; i < donCosInfoAccessers.Count; i++)
+            if (donCosDataInterface != null)
             {
-                //ModLogger.Log("donCosInfoAccessers["+i+"].UniqueId: " + donCosInfoAccessers[i].UniqueId);
-                //ModLogger.Log("donCosInfoAccessers["+i+"].StringId: " + donCosInfoAccessers[i].StringId);
-                //ModLogger.Log("donCosInfoAccessers["+i+"].Body: " + donCosInfoAccessers[i].Body);
-                //ModLogger.Log("donCosInfoAccessers["+i+"].Head: " + donCosInfoAccessers[i].Head);
-                //ModLogger.Log("donCosInfoAccessers["+i+"].IsBaseOff: " + donCosInfoAccessers[i].IsBaseOff);
-                //ModLogger.Log("donCosInfoAccessers["+i+"].Kigurumi: " + donCosInfoAccessers[i].Kigurumi);
-                //ModLogger.Log("donCosInfoAccessers["+i+"].Order: " + donCosInfoAccessers[i].Order);
-                //ModLogger.Log("donCosInfoAccessers["+i+"].Price: " + donCosInfoAccessers[i].Price);
-                //ModLogger.Log("donCosInfoAccessers["+i+"].Puchi: " + donCosInfoAccessers[i].Puchi);
-                if (donCosInfoAccessers[i].Puchi != -1 && numMakeFree > 0)
+                var donCosInfoAccessers = donCosDataInterface.donCosInfoAccessers;
+                int numMakeFree = 3;
+                for (int i = 0; i < donCosInfoAccessers.Count; i++)
                 {
-                    donCosInfoAccessers[i].Price = 0;
-                    numMakeFree--;
+                    //ModLogger.Log("donCosInfoAccessers["+i+"].UniqueId: " + donCosInfoAccessers[i].UniqueId);
+                    //ModLogger.Log("donCosInfoAccessers["+i+"].StringId: " + donCosInfoAccessers[i].StringId);
+                    //ModLogger.Log("donCosInfoAccessers["+i+"].Body: " + donCosInfoAccessers[i].Body);
+                    //ModLogger.Log("donCosInfoAccessers["+i+"].Head: " + donCosInfoAccessers[i].Head);
+                    //ModLogger.Log("donCosInfoAccessers["+i+"].IsBaseOff: " + donCosInfoAccessers[i].IsBaseOff);
+                    //ModLogger.Log("donCosInfoAccessers["+i+"].Kigurumi: " + donCosInfoAccessers[i].Kigurumi);
+                    //ModLogger.Log("donCosInfoAccessers["+i+"].Order: " + donCosInfoAccessers[i].Order);
+                    //ModLogger.Log("donCosInfoAccessers["+i+"].Price: " + donCosInfoAccessers[i].Price);
+                    //ModLogger.Log("donCosInfoAccessers["+i+"].Puchi: " + donCosInfoAccessers[i].Puchi);
+                    if (donCosInfoAccessers[i].Puchi != -1 && numMakeFree > 0)
+                    {
+                        donCosInfoAccessers[i].Price = 0;
+                        numMakeFree--;
+                    }
+                    OfficialDonCosInfoAccesser.Add(donCosInfoAccessers[i]);
                 }
-                OfficialDonCosInfoAccesser.Add(donCosInfoAccessers[i]);
+                AddCustomPuchi();
             }
-            AddCustomPuchi();
         }
 
         [HarmonyPatch(typeof(DataManager))]
@@ -154,22 +159,36 @@ namespace CustomPuchis.Patches
 
                 for (int i = 0; i < AllCustomPuchi.Count; i++)
                 {
+#if IL2CPP
+                    var donCosAccessers = new List<DonCosDataInterface.DonCosInfoAccesser>();
+                    for (int j = 0; j < DonCosInfoAccessers.Count; j++)
+                    {
+                        donCosAccessers.Add(DonCosInfoAccessers[j]);
+                    }
+                    var wordListInfoAccessers = new List<WordDataInterface.WordListInfoAccesser>();
+                    for (int j = 0; j < WordListInfoAccessers.Count; j++)
+                    {
+                        wordListInfoAccessers.Add(WordListInfoAccessers[j]);
+                    }
+#else
                     var donCosAccessers = DonCosInfoAccessers;
+                    var wordListInfoAccessers = WordListInfoAccessers;
+#endif
                     var donCosIndex = donCosAccessers.FindIndex((x) => x.StringId == AllCustomPuchi[i].StringId);
                     if (donCosIndex != -1)
                     {
-                        donCosAccessers.RemoveAt(donCosIndex);
+                        DonCosInfoAccessers.RemoveAt(donCosIndex);
                         ModLogger.Log("Removed puchi from donCosDataInterface: " + AllCustomPuchi[i].StringId, LogType.Debug);
                     }
 
-                    var nameIndex = WordListInfoAccessers.FindIndex((x) => x.Key == AllCustomPuchi[i].NameKey);
+                    var nameIndex = wordListInfoAccessers.FindIndex((x) => x.Key == AllCustomPuchi[i].NameKey);
                     if (nameIndex != -1)
                     {
                         WordListInfoAccessers.RemoveAt(nameIndex);
                         ModLogger.Log("Removed puchi name from wordDataInterface: " + AllCustomPuchi[i].StringId, LogType.Debug);
                     }
 
-                    var descIndex = WordListInfoAccessers.FindIndex((x) => x.Key == AllCustomPuchi[i].DescriptionKey);
+                    var descIndex = wordListInfoAccessers.FindIndex((x) => x.Key == AllCustomPuchi[i].DescriptionKey);
                     if (descIndex != -1)
                     {
                         WordListInfoAccessers.RemoveAt(descIndex);
@@ -193,7 +212,16 @@ namespace CustomPuchis.Patches
                 return;
             }
 
-            var donCosInfoAccessers = donCosDataInterface.donCosInfoAccessers;
+            var DonCosInfoAccessers = donCosDataInterface.donCosInfoAccessers;
+#if IL2CPP
+            var donCosInfoAccessers = new List<DonCosDataInterface.DonCosInfoAccesser>();
+            for (int j = 0; j < DonCosInfoAccessers.Count; j++)
+            {
+                donCosInfoAccessers.Add(DonCosInfoAccessers[j]);
+            }
+#else
+            var donCosInfoAccessers = DonCosInfoAccessers;
+#endif
             for (int i = 0; i < AllCustomPuchi.Count; i++)
             {
                 if (donCosInfoAccessers.FindIndex((x) => x.StringId == AllCustomPuchi[i].StringId) == -1)
@@ -209,7 +237,7 @@ namespace CustomPuchis.Patches
                         -1,                                        // Kigurumi
                         false                                      // isBaseOff
                     );
-                    donCosInfoAccessers.Add(accesser);
+                    DonCosInfoAccessers.Add(accesser);
 
                     // I'm not sure if it's necessary to add word data here
                     // It'd be convenient if it isn't necessary here
